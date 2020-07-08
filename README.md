@@ -2,7 +2,7 @@
 
 # CI/CD Demo - OpenShift Container Platform 4.4
 
-This repository includes the infrastructure and pipeline definition for continuous delivery using Jenkins, Nexus, SonarQube and Eclipse Che on OpenShift. 
+This repository includes the infrastructure and pipeline definition for continuous delivery using Jenkins, Nexus, SonarQube and Eclipse Che on OpenShift.
 
 * [Introduction](#introduction)
 * [Prerequisites](#prerequisites)
@@ -20,7 +20,7 @@ On every pipeline execution, the code goes through the following steps:
 
 1. Code is cloned from Gogs, built, tested and analyzed for bugs and bad patterns
 2. The WAR artifact is pushed to Nexus Repository manager
-3. A container image (_tasks:latest_) is built based on the _Tasks_ application WAR artifact deployed on WildFly
+3. A container image (_tasks:latest_) is built based on the _Tasks_ application WAR artifact deployed on EAP
 4. If Quay.io is enabled, the Tasks app container image is pushed to the quay.io image registry and a security scan is scheduled
 4. The _Tasks_ container image is deployed in a fresh new container in DEV project (pulled form Quay.io, if enabled)
 5. If tests successful, the pipeline is paused for the release manager to approve the release to STAGE
@@ -42,24 +42,6 @@ The application used in this pipeline is a JAX-RS application which is available
 
 [Download and install CodeReady Containers](https://developers.redhat.com/products/codeready-containers/overview) in order to create a local OpenShift 4 cluster on your workstation. Otherwise [create an OpenShift 4 cluster](https://try.openshift.com) on the public cloud or the infrastructure of your choice.
 
-## Automated Deploy on OpenShift
-You can se the `scripts/provision.sh` script provided to deploy the entire demo:
-
-  ```
-  ./provision.sh --help
-  ./provision.sh deploy 
-  ./provision.sh delete 
-  ```
-If you want to use Quay.io as an external registry with this demo, Go to quay.io and register for free. Then deploy the demo providing your 
-quay.io credentials:
-
-  ```
-  ./provision.sh deploy --enable-quay --quay-username quay_username --quay-password quay_password
-  ```
-In that case, the pipeline would create an image repository called `tasks-app` (default name but configurable) 
-on your Quay.io account and use that instead of the integrated OpenShift 
-registry, for pushing the built images and also pulling images for deployment. 
-  
 ## Manual Deploy on OpenShift
 
 Create the following projects for CI/CD components, Dev and Stage environments:
@@ -78,8 +60,9 @@ Create the following projects for CI/CD components, Dev and Stage environments:
 And then deploy the demo:
 
   ```
-  # Deploy Demo
+  # Install Jenkins
   oc new-app jenkins-ephemeral -n cicd  
+  # Deploy Demo
   oc new-app -n cicd -f cicd-template.yaml
   ```
 
@@ -92,8 +75,7 @@ your own names and use the following to create the demo:
 
 # JBoss EAP vs WildFly
 
-This demo by default uses the WildFly community image. You can use the JBoss EAP enterprise images provide by Red Hat by simply editing the 
-`tasks` build config in the _Tasks - Dev_ project and changing the builder image from `wildfly` to `jboss-eap70-openshift:1.5`. The demo would work exactly the same and would build the images using the JBoss EAP builder image. If using Quay, be sure not to leave the JBoss EAP images on a publicly accessible image repository. 
+This demo by default uses the EAP Red Hat image.
 
 ## Troubleshooting
 
@@ -134,13 +116,13 @@ This demo by default uses the WildFly community image. You can use the JBoss EAP
   * Explore SonarQube and show the metrics, stats, code coverage, etc
   * Explore _Tasks - Dev_ project in OpenShift console and verify the application is deployed in the DEV environment
   * Explore _Tasks - Stage_ project in OpenShift console and verify the application is deployed in the STAGE environment  
-  * If Quay enabled, click on the image tag in quay.io and show the security scannig results 
+  * If Quay enabled, click on the image tag in quay.io and show the security scannig results
 
 ![](images/sonarqube-analysis.png?raw=true)
 
 ![](images/quay-claire.png?raw=true)
 
-* Clone and checkout the _eap-7_ branch of the _openshift-tasks_ git repository and using an IDE (e.g. JBoss Developer Studio), remove the ```@Ignore``` annotation from ```src/test/java/org/jboss/as/quickstarts/tasksrs/service/UserResourceTest.java``` test methods to enable the unit tests. Commit and push to the git repo.
+* Clone and checkout the master branch of the _openshift-tasks_ git repository and using an IDE (e.g. JBoss Developer Studio), remove the ```@Ignore``` annotation from ```src/test/java/org/jboss/as/quickstarts/tasksrs/service/UserResourceTest.java``` test methods to enable the unit tests. Commit and push to the git repo.
 
 * Check out Jenkins, a pipeline instance is created and is being executed. The pipeline will fail during unit tests due to the enabled unit test.
 
@@ -148,7 +130,7 @@ This demo by default uses the WildFly community image. You can use the JBoss EAP
 
 * Fix the test by modifying ```src/main/java/org/jboss/as/quickstarts/tasksrs/service/UserResource.java``` and uncommenting the sort function in _getUsers_ method.
 
-* Run the unit test in the IDE. The unit test runs green. 
+* Run the unit test in the IDE. The unit test runs green.
 
 * Commit and push the fix to the git repository and verify a pipeline instance is created in Jenkins and executes successfully.
 
