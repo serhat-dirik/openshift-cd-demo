@@ -38,6 +38,26 @@ parameters:
   value: "false"
   name: ENABLE_SONAR
   required: true
+- displayName: set http proxies
+  description: Sets http proxies
+  value: "false"
+  name: SET_PROXY
+  required: true
+- displayName: http proxy
+  description: Sets http proxy
+  value: ""
+  name: HTTP_PROXY
+  required: false
+- displayName: https proxy
+  description: Sets https proxy
+  value: ""
+  name: HTTPS_PROXY
+  required: false
+- displayName: no proxy
+  description: Sets no proxy
+  value: ""
+  name: NO_PROXY
+  required: false
 - displayName: Quay.io Username
   description: Quay.io username to push the images to tasks-sample-app repository on your Quay.io account
   name: QUAY_USERNAME
@@ -103,6 +123,8 @@ objects:
               stage('Build App') {
                 steps {
                   git branch: 'master', url: 'http://gogs:3000/gogs/openshift-tasks.git'
+                  sh "java -version"
+                  sh "env"
                   sh "${mvnCmd} install -DskipTests=true"
                 }
               }
@@ -285,6 +307,14 @@ objects:
           - -x
           - -c
           - |
+            if [ "${SET_PROXY}" == "true" ] ; then
+              HTTP_PROXY=${HTTP_PROXY}
+              HTTPS_PROXY=${HTTPS_PROXY}
+              http_proxy=${HTTP_PROXY}
+              https_proxy=${HTTPS_PROXY}
+              NO_PROXY=${NO_PROXY}
+              no_proxy=${NO_PROXY}
+            fi
             # adjust jenkins
             oc set resources dc/jenkins --limits=cpu=2,memory=2Gi --requests=cpu=100m,memory=512Mi
             oc label dc jenkins app=jenkins --overwrite
