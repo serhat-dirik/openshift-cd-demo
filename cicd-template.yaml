@@ -313,7 +313,7 @@ objects:
               oc secrets link default quay-cicd-secret --for=pull -n ${STAGE_PROJECT}
             else
               # dev
-              oc new-build --name=tasks --image-stream=jboss-eap72-openshift:1.2 --binary=true -n ${DEV_PROJECT}
+              oc new-build --name=tasks --image-stream=jboss-eap72-openshift:latest --binary=true -n ${DEV_PROJECT}
               oc new-app tasks:latest --allow-missing-images -n ${DEV_PROJECT}
               oc set triggers dc -l app=tasks --containers=tasks --from-image=tasks:latest --manual -n ${DEV_PROJECT}
 
